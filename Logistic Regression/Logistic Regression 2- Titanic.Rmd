@@ -1,0 +1,109 @@
+---
+title: "Logistic Regression"
+author: "SRIRAM VIVEK"
+output: pdf_document
+date: "2025-02-26"
+---
+
+
+Cleaning the data
+
+```{r }
+
+
+library(tidyverse)
+library(caret)
+
+
+titanic_data <- read.csv('/Users/sriram/Desktop/SEMESTER 2/AMS 580/Logistic Regression/Titanic2.csv')
+
+
+titanic_cleaned <- titanic_data %>%
+  select(-PassengerId, -Name, -Ticket, -Cabin)
+
+titanic_cleaned <- titanic_cleaned %>%
+  filter(!is.na(Age))
+
+n_passengers <- nrow(titanic_cleaned)
+cat("Number of passengers after cleaning:", n_passengers, "\n")
+
+```
+
+```{r }
+
+
+
+titanic_cleaned <- titanic_cleaned %>%
+  mutate(Survived = as.factor(Survived),
+         Pclass = as.factor(Pclass))
+
+str(titanic_cleaned)
+
+```
+
+Using the random seed 123 to divide the cleaned data into 80%
+training and 20% testing.
+
+```{r }
+
+set.seed(123)
+training_samples <- createDataPartition(titanic_cleaned$Survived, p = 0.8, list = FALSE)
+train_data <- titanic_cleaned[training_samples, ]
+test_data <- titanic_cleaned[-training_samples, ]
+
+```
+
+Fitting a logistic regression model with all the other 7 predictors using
+the training data.
+
+```{r }
+
+model <- glm(Survived ~ ., data = train_data, family = binomial)
+summary(model)
+
+```
+
+Predicting the response variable "Survived" (whether the subject survived or not) for the testing data based on the fitted model followed by generating a confusion matrix, reporting overall accuracy,  sensitivity and specificity.
+
+
+```{r }
+
+probabilities <- predict(model, test_data, type = "response")
+predicted_classes <- ifelse(probabilities > 0.5, 1, 0)
+
+confusion_matrix <- table(Predicted = predicted_classes, Actual = test_data$Survived)
+print(confusion_matrix)
+
+accuracy <- mean(predicted_classes == test_data$Survived)
+sensitivity <- sum(predicted_classes == 1 & test_data$Survived == 1) / sum(test_data$Survived == 1)
+specificity <- sum(predicted_classes == 0 & test_data$Survived == 0) / sum(test_data$Survived == 0)
+
+cat("Overall Accuracy:", accuracy, "\n")
+cat("Sensitivity:", sensitivity, "\n")
+cat("Specificity:", specificity, "\n")
+
+```
+
+Testing the above model to predict the survival of additional passengers.
+
+```{r }
+
+additional_passengers <- data.frame(
+  Pclass = as.factor(c(3, 1, 2)),
+  Sex = c("male", "female", "male"),
+  Age = c(24, 68, 41),
+  SibSp = c(1, 0, 1),
+  Parch = c(0, 0, 2),
+  Fare = c(8.42, 24.34, 41.93),
+  Embarked = c("Q", "C", "S")
+)
+
+additional_probabilities <- predict(model, additional_passengers, type = "response")
+additional_predicted_classes <- ifelse(additional_probabilities > 0.5, 1, 0)
+
+cat("Predicted survival for additional passengers:", additional_predicted_classes, "\n")
+cat("Passenger 892: ", "Not Survived\n")
+cat("Passenger 893: ", "Survived\n")
+cat("Passenger 894: ", "Not Survived")
+```
+
