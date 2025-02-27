@@ -167,7 +167,7 @@ install.packages(c("caret", "MASS", "leaps", "dplyr", "tidyverse"))
 
 - **Sriram Vivek**
 - **GitHub:** [sriramv1212](https://github.com/sriramv1212)
-- **Email:** [sriram.vivek@stonybrook.edu]
+- **Email:** sriram.vivek@stonybrook.edu
 
 ---
 
@@ -184,7 +184,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ---
 
-Happy Learning! 🚀
-```
+Happy Learning! 
 
----
+
+
