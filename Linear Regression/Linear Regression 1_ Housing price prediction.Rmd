@@ -1,0 +1,120 @@
+---
+title: "Linear Regression"
+author: "Sriram Vivek"
+output: pdf_document
+date: "2025-02-19"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(caret)       
+library(MASS)        
+library(leaps)       
+library(dplyr)       
+
+```
+Using the random seed 123 to divide the data into 75% training and 25% testing.
+
+```{r }
+
+ames_data <- read.csv("/Users/sriram/Desktop/SEMESTER 2/AMS 580/Linear Regression/Ames_Housing_Data.csv")
+
+
+ames_data <- na.omit(ames_data)
+
+
+set.seed(123)
+
+
+index <- createDataPartition(ames_data$SalePrice, p = 0.75, list = FALSE)
+train_data <- ames_data[index, ]
+test_data <- ames_data[-index, ]
+
+```
+
+Finding the best model using the stepwise variable selection method (based on the
+BIC criterion) using the training data and displaying necessary information.
+
+       
+```{r }
+
+
+full_model <- lm(SalePrice ~ ., data = train_data)
+
+
+step_model <- stepAIC(full_model, direction = "both", k = log(nrow(train_data)), trace = FALSE)
+
+
+cat("Stepwise Model Coefficients:\n")
+print(coef(step_model))
+
+
+step_predictions <- predict(step_model, newdata = test_data)
+
+
+step_rmse <- sqrt(mean((test_data$SalePrice - step_predictions)^2))
+step_r_squared <- cor(test_data$SalePrice, step_predictions)^2
+
+cat("\nStepwise Model Performance:\n")
+cat("RMSE:", step_rmse, "\n")
+cat("R^2:", step_r_squared, "\n")
+
+```
+
+Finding the best model using the best subset variable selection method (based on
+the SSE criterion) and siplaying the necessary information.
+
+```{r }
+
+
+
+subset_model <- regsubsets(SalePrice ~ ., data = train_data, nvmax = 20)
+
+best_subset_index <- which.min(summary(subset_model)$bic)
+best_subset_vars <- names(coef(subset_model, id = best_subset_index))[-1]  # Exclude intercept
+
+best_subset_formula <- as.formula(paste("SalePrice ~", paste(best_subset_vars, collapse = " + ")))
+best_subset_model <- lm(best_subset_formula, data = train_data)
+
+cat("\nBest Subset Model Coefficients:\n")
+print(coef(best_subset_model))
+
+best_subset_predictions <- predict(best_subset_model, newdata = test_data)
+
+best_subset_rmse <- sqrt(mean((test_data$SalePrice - best_subset_predictions)^2))
+best_subset_r_squared <- cor(test_data$SalePrice, best_subset_predictions)^2
+
+cat("\nBest Subset Model Performance:\n")
+cat("RMSE:", best_subset_rmse, "\n")
+cat("R^2:", best_subset_r_squared, "\n")
+
+```
+
+Comparison of the above two models
+           
+```{r }
+
+
+step_bic <- BIC(step_model)
+best_subset_bic <- BIC(best_subset_model)
+
+cat("\nModel Comparison (BIC):\n")
+cat("Stepwise Model BIC:", step_bic, "\n")
+cat("Best Subset Model BIC:", best_subset_bic, "\n")
+
+cat("\nModel Comparison (Test Data):\n")
+cat("Stepwise Model RMSE:", step_rmse, "\n")
+cat("Best Subset Model RMSE:", best_subset_rmse, "\n")
+cat("Stepwise Model R^2:", step_r_squared, "\n")
+cat("Best Subset Model R^2:", best_subset_r_squared, "\n")
+
+```
+
+
+
+
+
+
